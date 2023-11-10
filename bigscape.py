@@ -69,7 +69,7 @@ global mibig_set
 global genbankDict
 global valid_classes
 
-
+# {{{ process_gbk_files
 def process_gbk_files(gbk, min_bgc_size, bgc_info, files_no_proteins, files_no_biosynthetic_genes):
     """ Given a file path to a GenBank file, reads information about the BGC"""
 
@@ -393,8 +393,9 @@ def process_gbk_files(gbk, min_bgc_size, bgc_info, files_no_proteins, files_no_b
             print(" Discarding {} (size less than {} bp, was {})".format(clusterName, str(min_bgc_size), str(bgc_size)))
     
     return adding_sequence
+# }}}
 
-
+# {{{ get_gbk_files
 def get_gbk_files(inputpath, outputdir, bgc_fasta_folder, min_bgc_size, include_gbk_str, exclude_gbk_str, bgc_info):
     """Searches given directory for genbank files recursively, will assume that
     the genbank files that have the same name are the same genbank file. 
@@ -461,8 +462,9 @@ def get_gbk_files(inputpath, outputdir, bgc_fasta_folder, min_bgc_size, include_
     print(" Files that had its sequence extracted: {:d}".format(processed_sequences))
 
     return
+# }}}
 
-
+# {{{ timeit
 def timeit(funct):
     """Writes the runtimes of functions to a file and prints them on screen.
 
@@ -483,8 +485,9 @@ def timeit(funct):
         return ret
     
     return _wrap
+# }}}
 
-
+# {{{ generate_network
 @timeit
 def generate_network(cluster_pairs, cores):
     """Distributes the distance calculation part
@@ -504,8 +507,9 @@ def generate_network(cluster_pairs, cores):
       #network_matrix.append(generate_dist_matrix(pair))
 
     return network_matrix
+# }}}
 
-
+# {{{ generate_dist_matrix
 def generate_dist_matrix(parms):
     """Unpack data to actually launch cluster_distance for one pair of BGCs"""
     
@@ -564,8 +568,9 @@ def generate_dist_matrix(parms):
     network_row = array('f',[cluster1Idx, cluster2Idx, dist, (1-dist)**2, jaccard, 
                              dss, ai, rDSSna, rDSS, S, Sa, lcsStartA, lcsStartB, seedLength, reverse])
     return network_row
+# }}}
     
-
+# {{{ score_expansion
 def score_expansion(x_string_, y_string_, downstream):
     """
     Input:
@@ -625,8 +630,9 @@ def score_expansion(x_string_, y_string_, downstream):
         #print("")
             
     return max_score, a
+# }}}
 
-
+# {{{ cluster_distance_lcs
 def cluster_distance_lcs(A, B, A_domlist, B_domlist, dcg_A, dcg_b, core_pos_A, core_pos_b, go_A, go_b, bgc_class):
     """Compare two clusters using information on their domains, and the 
     sequences of the domains. 
@@ -1162,7 +1168,9 @@ def cluster_distance_lcs(A, B, A_domlist, B_domlist, dcg_A, dcg_b, core_pos_A, c
         rev = 1.0
         
     return Distance, Jaccard, DSS, AI, DSS_non_anchor, DSS_anchor, S, S_anchor, lcsStartA, lcsStartB, seedLength, rev
+# }}}
 
+# {{{ launch_hmmalign
 @timeit
 def launch_hmmalign(cores, domain_sequence_list):
     """
@@ -1173,8 +1181,9 @@ def launch_hmmalign(cores, domain_sequence_list):
     pool.map(run_hmmalign, domain_sequence_list)
     pool.close()
     pool.join()
+# }}}
    
-
+# {{{ run_hmmalign
 def run_hmmalign(domain_file):
     #domain_file already contains the full path, with the file extension
     domain_base = domain_file.split(os.sep)[-1][:-6]
@@ -1194,8 +1203,9 @@ def run_hmmalign(domain_file):
     
     stockholm_parser(domain_file_stk)
     #SeqIO.convert(domain_file_stk, "stockholm", domain_file[:-6]+".algn", "fasta")
+# }}}
     
-    
+# {{{ stockholm_parser
 def stockholm_parser(stkFile):
     reference = ""
     algnDict = defaultdict(str)
@@ -1239,8 +1249,9 @@ def stockholm_parser(stkFile):
                 outfile.write(">{}\n".format(header))
                 outfile.write(sequence + "\n")
     return
+# }}}
 
-
+# {{{ runHmmScan
 def runHmmScan(fastaPath, hmmPath, outputdir, verbose):
     """ Runs hmmscan command on a fasta file with a single core to generate a
     domtable file"""
@@ -1256,8 +1267,9 @@ def runHmmScan(fastaPath, hmmPath, outputdir, verbose):
 
     else:
         sys.exit("Error running hmmscan: Fasta file " + fastaPath + " doesn't exist")
+# }}}
 
-
+# {{{ parseHmmScan
 def parseHmmScan(hmmscanResults, pfd_folder, pfs_folder, overlapCutoff):
     outputbase = ".".join(hmmscanResults.split(os.sep)[-1].split(".")[:-1])
     # try to read the domtable file to find out if this gbk has domains. Domains
@@ -1303,8 +1315,9 @@ def parseHmmScan(hmmscanResults, pfd_folder, pfs_folder, overlapCutoff):
         sys.exit("Error: hmmscan file " + outputbase + " was not found! (parseHmmScan)")
 
     return("")
+# }}}
 
-
+# {{{ clusterJsonBatch
 def clusterJsonBatch(bgcs, pathBase, className, matrix, pos_alignments, cutoffs=[1.0], damping=0.9, clusterClans=False, clanCutoff=(0.5,0.8), htmlFolder=None):
     """BGC Family calling
     Uses csr sparse matrices to call Gene Cluster Families (GCFs) using Affinity
@@ -1908,8 +1921,9 @@ def clusterJsonBatch(bgcs, pathBase, className, matrix, pos_alignments, cutoffs=
         results[htmlFolder_run] = family_data
 
     return results
+# }}}
 
-
+# {{{ CMD_parser
 def CMD_parser():
     parser = ArgumentParser(prog="BiG-SCAPE")
     
@@ -2071,6 +2085,7 @@ def CMD_parser():
         (2022-11-14)")
 
     return parser.parse_args()
+# }}}
 
 
 if __name__=="__main__":
